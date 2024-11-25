@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XB3PR2Y1TQ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'G-XB3PR2Y1TQ');
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>3D Convex Splatting</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,600' rel='stylesheet'
+        type='text/css'>
+    <link rel="stylesheet" href="assets/css/Highlight-Clean.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <!-- compare two images -->
+    <!-- <link rel="stylesheet" href="assets/css/bulma.min.css"> -->
+    <link rel="stylesheet" href="assets/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="assets/css/bulma-slider.min.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/logo.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/logo.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/logo.png">
+
+
+    <link rel="manifest" href="site.webmanifest">
+
+    <meta property="og:site_name" content="3D Convex Splatting: Radiance Field Rendering with 3D Smooth Convexes" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:title" content="3D Convex Splatting: Radiance Field Rendering with 3D Smooth Convexes" />
+    <meta property="og:description" content="3D Convex Splatting: Radiance Field Rendering with 3D Smooth Convexes, 2024." />
+
+    <script src="assets/js/video_comparison.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@2.0.1/dist/model-viewer.min.js"></script>
+
+    <script src="assets/js/bulma-carousel.min.js"></script>
+    <script src="assets/js/bulma-slider.min.js"></script>
+
+
+    <style>
+        .small-bal-container {
+            width: 560px; /* Set the desired width */
+            height: 322px; /* Set the height proportional to the aspect ratio (e.g., 16:9) */
+            margin: 0 auto; /* Center the images */
+            position: relative; /* Maintain the positioning for the slider and labels */
+            overflow: hidden; /* Ensure content stays within the container */
+        }
+    
+        .small-bal-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensure images scale proportionally */
+        }
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            background-color: black; /* Black circle */
+            border-radius: 50%; /* Make it circular */
+            width: 50px; /* Larger circle width */
+            height: 50px; /* Larger circle height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid white; /* White border around the circle */
+        }
+
+        .carousel-control-prev-icon::after,
+        .carousel-control-next-icon::after {
+            content: ''; /* Remove default arrow */
+            display: inline-block;
+            width: 8px; /* Slightly larger arrow width */
+            height: 8px; /* Slightly larger arrow height */
+            border: solid white; /* White arrow */
+        }
+
+        .carousel-control-prev-icon::after {
+            border-width: 0 4px 4px 0; /* Adjust arrow thickness */
+            transform: rotate(135deg); /* Left arrow */
+            margin-left: -3px; /* Centering tweak */
+        }
+
+        .carousel-control-next-icon::after {
+            border-width: 0 4px 4px 0; /* Adjust arrow thickness */
+            transform: rotate(-45deg); /* Right arrow */
+            margin-right: -3px; /* Centering tweak */
+        }
+    </style>
+
+
+</head>
+
+<body>
+
+    <div class="highlight-clean" style="padding-bottom: 1;">
+        <div class="container" style="max-width: 100%; margin-bottom: 10px;">
+            <h1 class="text-center" style="margin-bottom: 5px;">3D Convex Splatting: Radiance Field Rendering with 3D Smooth Convexes</h1>
+        </div>
+        <div class="container author-container" style="margin-top: 30px;">
+            <div class="row authors">
+                <div class="col">
+                    <h6><a href="https://scholar.google.com/citations?user=Z0nJ5LwAAAAJ&hl=en">Jan Held*<sup>1, 2</sup> </a></h6>
+                </div>
+                <div class="col">
+                    <h6><a href="https://scholar.google.com/citations?user=kpDRpBwAAAAJ&hl=en">Renaud Vandeghen*<sup>1</sup> </a></h6>
+                </div>
+                <div class="col">
+                    <h6><a href="https://abdullahamdi.com/">Abdullah Hamdi*<sup>3</sup> </a></h6>
+                </div>
+                <div class="col">
+                    <h6><a class="text-center" href="https://scholar.google.be/citations?user=_K1L2MIAAAAJ&hl=fr">Adrien Deliege<sup>1</sup></a></h6>
+                </div>
+                <div class="col">
+                    <h6><a href="https://www.anthonycioppa.be/">Anthony Cioppa<sup>1</sup> </a></h6>
+                </div>
+            </div>
+            <div class="row authors">
+                <div class="col">
+                    <h6><a href="https://www.silviogiancola.com/">Silvio Giancola<sup>2</sup></a></h6>
+                </div>
+                <div class="col">
+                    <h6><a href="https://www.robots.ox.ac.uk/~vedaldi/">Andrea Vedaldi<sup>3</sup></a></h6>
+                </div>
+                <div class="col">
+                    <h6><a href="https://www.bernardghanem.com/">Bernard Ghanem<sup>2</sup></a></h6>
+                </div>
+                <div class="col">
+                    <h6><a href="https://scholar.google.com/citations?user=IQm8ljgAAAAJ&hl=en">Marc Van Droogenbroeck<sup>1</sup></a></h6>
+                </div>
+            </div>
+            <div class="row affiliations" style="margin-top: 15px; margin-bottom: 0px;">
+                <div class="col">
+                    <h6 class="text-center"><a class="text-center"><sup>1</sup>University of Liege</a></h6>
+                </div>
+                <div class="col">
+                    <h6 class="text-center"><a class="text-center"><sup>2</sup>King Abdullah University of Science and
+                            Technology (KAUST)</a></h6>
+                </div>
+                <div class="col">
+                    <h6 class="text-center"><a class="text-center"><sup>3</sup>University of Oxford</a></h6>
+                </div>
+            </div>
+        </div>
+    </div>
+        <div class="container align-items-center">
+            <div class="row text-center justify-content-center mx-auto">
+                <div class="col-sm-2">
+                    <a href="https://arxiv.org/abs/2411.14974" target="_blank" class="link-block w-inline-block">
+                        <img src="assets/media/arxiv_paper.png" alt="paper" class="img-fluid" style="height:60px" /></a>
+                    <br>
+                    <div class="text-block-2"><strong class="bold-text-nerf_v2">Arxiv</strong></div>
+                </div>
+                <div class="col-sm-2">
+                    <a href="https://www.convexsplatting.com" target="_blank" class="link-block w-inline-block">
+                        <img src="assets/media/github.png" alt="github" class="img-fluid" style="height:60px" /></a>
+                    <br>
+                    <div class="text-block-2"><strong class="bold-text-nerf_v2">Code</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center" style="padding-top: 10px; margin: 0 auto; max-width: 1100px;">
+            Code will be released on the 5th of December.
+        </p>
+
+        <div class="container">
+        
+            <hr class="divider" />
+            <h2></h2>
+            
+            <div class="row">
+                <!-- Example 2 -->
+                <div class="col-md-6">
+                    <h5 class="text-center">3D Gaussian Splatting vs 3D Convex Splatting</h5>
+                    <div id="example4" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <img src="assets/comparisons/Compressed/stump2_cvx.png" alt="Example 2 After">
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <img src="assets/comparisons/Compressed/stump2_gauss.png" alt="Example 2 Before">
+                                    <div class="bal-beforePosition beforeLabel">
+                                        3D Gaussian Splatting
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Example 3 -->
+                <div class="col-md-6">
+                    <h5 class="text-center">Ground truth vs 3D Convex Splatting</h5>
+                    <div id="example5" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <img src="assets/comparisons/Compressed/truck4_cvx.png" alt="Example 3 After">
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <img src="assets/comparisons/Compressed/truck4_gt.png" alt="Example 3 Before">
+                                    <div class="bal-beforePosition beforeLabel">
+                                        Ground truth
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Example 2 -->
+                <div class="col-md-6">
+                    <div id="example2" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <img src="assets/comparisons/Compressed/train2_cvx.png" alt="Example 2 After">
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <img src="assets/comparisons/Compressed/train2_gauss.png" alt="Example 2 Before">
+                                    <div class="bal-beforePosition beforeLabel">
+                                        3D Gaussian Splatting
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Example 3 -->
+                <div class="col-md-6">
+                    <div id="example3" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <img src="assets/comparisons/Compressed/garden_cvx.png" alt="Example 3 After">
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <img src="assets/comparisons/Compressed/garden_gt.png" alt="Example 3 Before">
+                                    <div class="bal-beforePosition beforeLabel">
+                                        Ground truth
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <!-- Example 2 -->
+                <div class="col-md-6">
+                    <div id="example6" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <img src="assets/comparisons/Compressed/flowers_cvx.png" alt="Example 2 After">
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <img src="assets/comparisons/Compressed/flowers_gaus.png" alt="Example 2 Before">
+                                    <div class="bal-beforePosition beforeLabel">
+                                        3D Gaussian Splatting
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Example 3 -->
+                <div class="col-md-6">
+                    <div id="example7" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <img src="assets/comparisons/Compressed/drjon_cvx.png" alt="Example 3 After">
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <img src="assets/comparisons/Compressed/drjon_gt.png" alt="Example 3 Before">
+                                    <div class="bal-beforePosition beforeLabel">
+                                        Ground truth
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+
+            
+
+        <p class="text-center" style="padding-top: 10px; margin: 0 auto; max-width: 1100px;">
+            3D Convex Splatting achieves high-quality novel view synthesis and fast rendering by representing scenes with 3D smooth convexes.
+            In contrast, the softness of Gaussian primitives often results in blurring and loss of detail, while 3D Convex Splatting effectively captures sharp edges and fine details.
+        </p>
+
+        
+        <hr class="divider" />
+        <div class="container" style="max-width: col-sm-12;">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h2 style="font-weight: bold;">Abstract</h2>
+                    <p style="text-align: justify">
+                        Recent advances in radiance field reconstruction, such as 3D Gaussian Splatting (3DGS), have achieved high-quality novel view synthesis and fast rendering by representing scenes with compositions of Gaussian primitives. However, 3D Gaussians present several limitations for scene reconstruction. Accurately capturing hard edges is challenging without significantly increasing the number of Gaussians, creating a large memory footprint. Moreover, they struggle to represent flat surfaces, as they are diffused in space. Without hand-crafted regularizers, they tend to disperse irregularly around the actual surface. <br>
+                        To circumvent these issues, we introduce a novel method, named <span style="font-weight: bold;">3D Convex Splatting (3DCS)</span>, which leverages 3D smooth convexes as primitives for modeling geometrically-meaningful radiance fields from multi-view images. Smooth convex shapes offer greater flexibility than Gaussians, allowing for a better representation of 3D scenes with hard edges and dense volumes using fewer primitives. Powered by our efficient CUDA-based rasterizer, 3DCS achieves superior performance over 3DGS on benchmarks such as Mip-NeRF360, Tanks and Temples, and Deep Blending. Specifically, our method attains an improvement of up to <span style="font-weight: bold;">0.81 in PSNR</span> and <span style="font-weight: bold;">0.026 in LPIPS</span> compared to 3DGS while maintaining high rendering speeds and reducing the number of required primitives. Our results highlight the potential of 3D Convex Splatting to become the new standard for high-quality scene reconstruction and novel view synthesis.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        
+        <hr class="divider" />
+        <div class="container" style="max-width: col-sm-12;">
+        <h2 style="font-weight: bold;">Smooth Convexes</h2>
+            <div class="container">
+                <div class="row">
+                    <!-- GIF 1 -->
+                    <div class="col-md-3">
+                        <img src="assets/Gif/rectangle.gif" alt="GIF 1" class="img-fluid">
+                        <p class="text-center">Rectangle</p>
+                    </div>
+                    <!-- GIF 2 -->
+                    <div class="col-md-3">
+                        <img src="assets/Gif/circle.gif" alt="GIF 1" class="img-fluid">
+                        <p class="text-center">Circle</p>
+                    </div>
+                    <!-- GIF 3 -->
+                    <div class="col-md-3">
+                        <img src="assets/Gif/gaussian_iso.gif" alt="GIF 1" class="img-fluid">
+                        <p class="text-center">Isotropic Gaussian</p>
+                    </div>
+                    <!-- GIF 4 -->
+                    <div class="col-md-3">
+                        <img src="assets/Gif/gaussian_asi.gif" alt="GIF 1" class="img-fluid">
+                        <p class="text-center">Anisotropic Gaussian</p>
+                    </div>
+                </div>
+            </div>
+
+            <p style="text-align: justify;">
+                Smooth convexes can represent a wide variety of shapes, whether hard or soft, dense or diffuse. 
+                They effectively approximate diverse geometries, including both polyhedra and Gaussians, while requiring fewer primitives for accurate representation. 
+                The red lines describe the convex hull, whereas the black dots represent the point set. 
+            </p>
+        </div>
+
+
+
+        <hr class="divider" />
+        <div class="container" style="max-width: col-sm-12;">
+            <h2 style="font-weight: bold;">More Visual Results</h2>
+            
+
+            <div class="row">
+                <!-- Example 2 -->
+                <div class="col-md-6">
+                    <div id="example11" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <video  src="assets/video/bicycle_cvx.mp4" autoplay loop muted playsinline class="img-fluid"></video>
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <video  src="assets/video/bicycle_gauss.mp4" autoplay loop muted playsinline class="img-fluid"></video>
+                                    <div class="bal-beforePosition beforeLabel">
+                                        3D Gaussian Splatting
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Example 3 -->
+                <div class="col-md-6">
+                    <div id="example12" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <video  src="assets/video/flowers_cvx.mp4" autoplay loop muted playsinline class="img-fluid"></video>
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <video  src="assets/video/flowers_gauss.mp4" autoplay loop muted playsinline class="img-fluid"></video>
+                                    <div class="bal-beforePosition beforeLabel">
+                                        3D Gaussian Splatting
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p style="text-align: justify;">
+                3D Convex Splatting produces sharper and more detailed images. Notably, it renders the road and flowers with greater realism and captures finer details compared to 3D Gaussian Splatting.
+            </p>
+
+
+            <div class="row">
+                <!-- Example 2 -->
+                <div class="col-md-6">
+                    <div id="example13" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <video  src="assets/video/truck_cvx.mp4" autoplay loop muted playsinline class="img-fluid"></video>
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <video  src="assets/video/truck_10.mp4" autoplay loop muted playsinline class="img-fluid"></video>
+                                    <div class="bal-beforePosition beforeLabel">
+                                        10% of the final shapes
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Example 3 -->
+                <div class="col-md-6">
+                    <div id="example14" class="bal-container-small small-bal-container">
+                        <div class="bal-wrapper">
+                            <div class="bal-after">
+                                <video  src="assets/video/truck_cvx.mp4" autoplay loop muted playsinline class="img-fluid"></video>
+                                <div class="bal-afterPosition afterLabel">
+                                    3D Convex Splatting (Ours)
+                                </div>
+                            </div>
+                            <div class="bal-before">
+                                <div class="bal-before-inset">
+                                    <video  src="assets/video/truck_50.mp4" autoplay loop muted playsinline class="img-fluid"></video>
+                                    <div class="bal-beforePosition beforeLabel">
+                                        50% of the final shapes
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bal-handle">
+                                <span class="handle-left-arrow"></span>
+                                <span class="handle-right-arrow"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <p style="text-align: justify;">
+                We render the truck scene with 10% and 50% of the final shapes to illustrate how the individual optimized 3D Smooth Convexes appear.
+            </p>
+    
+
+        </div>
+
+
+
+
+
+
+        <hr class="divider" />
+        <div class="container">
+            <h2 style="font-weight: bold;">Main Results</h2>
+            <div class="row">
+                <div class="col-sm-12">
+                    <img src="assets/table.png" style="max-width: 100%;"/>
+                </div>
+            </div>
+        </div>
+
+
+        <p class="text-center" style="padding-top: 10px; margin: 0 auto; max-width: 1100px;">
+           3D Convex Splatting consistently achieves higher rendering quality, outperforming other rendering primitives like 3D Gaussian Splatting (3DGS), 2D Gaussian Splatting (2DGS) and Generalized Exponential Splatting (GES).
+           Meanwhile, the lightweight version uses 15% of the memory required by 3DGS while maintaining comparable rendering quality.
+        </p>
+
+
+        <hr class="divider" />
+        <div class="container">
+            <h2 style="font-weight: bold;">Citation</h2>
+                    <code>
+                        @InProceedings{Held2024Convex,<br>
+                        &nbsp; title  = {3D Convex Splatting: Radiance Field Rendering with 3D Smooth Convexes},<br>
+                        &nbsp; author = {Held, Jan and Vandeghen, Renaud and Hamdi, Abdullah and Deliege, Adrien and Cioppa, Anthony
+                                         and Giancola, Silvio and Vedaldi, Andrea and Ghanem, Bernard and Van Droogenbroeck, Marc},<br>
+                        <!-- &nbsp; booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},<br> -->
+                        <!-- &nbsp; month   = {June},<br> -->
+                        &nbsp; year   = {2024},<br>
+                        <!-- &nbsp; pages   = {19812-19822},<br> -->
+
+                    }</code>
+                </div>
+            </div>
+        </div>
+
+        
+        <!-- Footer -->
+        <hr class="divider" />
+        <footer class="footer">
+            <div class="container">
+                <div class="content has-text-centered">
+                    <a class="icon-link" href="assets/videos/nerfies_paper.pdf">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
+                    <a class="icon-link" href="https://github.com/keunhong" class="external-link" disabled>
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+                <div class="columns is-centered">
+                    <div class="column is-8">
+                        <div class="content">
+                            <p>
+                                This website is licensed under a <a rel="license"
+                                    href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+                                    Commons Attribution-ShareAlike 4.0 International License</a>.
+                            </p>
+                            <p>
+                                We borrow the <a href="https://dreamfusion3d.github.io/">source code</a> for our
+                                website.
+                                We sincerely appreciate DreamFusion authors for their awesome templates.
+                                <!-- we just ask that you link back to this page in the footer.
+                            Please remember to remove the analytics code included in the header of the website which
+                            you do not want on your website. -->
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+
+
+
+
+        <script src="https://polyfill.io/v3/polyfill.js?features=IntersectionObserver"></script>
+        <script src="assets/js/yall.js"></script>
+        <script>
+            yall({
+                observeChanges: true
+            });
+        </script>
+        <script src="assets/js/scripts.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js">
+        </script>
+        <script src="https://uploads-ssl.webflow.com/51e0d73d83d06baa7a00000f/js/webflow.fd002feec.js"></script>
+        <!-- Import the component -->
+
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                var video = document.getElementById('speed025');
+                video.playbackRate = 0.1; // Play at half speed
+            });
+        </script>
+       
+        <script>
+            new BeforeAfter({
+                id: '#example1'
+            });
+        </script>
+
+        <script>
+            new BeforeAfter({
+                id: '#example2'
+            });
+        </script>
+
+        <script>
+            new BeforeAfter({
+                id: '#example3'
+            });
+        </script>
+
+
+        <script>
+            new BeforeAfter({
+                id: '#example4'
+            });
+        </script>
+
+        <script>
+            new BeforeAfter({
+                id: '#example5'
+            });
+        </script>
+
+
+        <script>
+            new BeforeAfter({
+                id: '#example6'
+            });
+        </script>
+
+
+        <script>
+            new BeforeAfter({
+                id: '#example7'
+            });
+        </script>
+
+
+        <script>
+            new BeforeAfter({
+                id: '#example11'
+            });
+        </script>
+
+        <script>
+            new BeforeAfter({
+                id: '#example12'
+            });
+        </script>
+
+
+        <script>
+            new BeforeAfter({
+                id: '#example13'
+            });
+        </script>
+
+        <script>
+            new BeforeAfter({
+                id: '#example14'
+            });
+        </script>
+
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+
+</body>
+
+</html>
